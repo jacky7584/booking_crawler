@@ -18,7 +18,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 def scrape_hotel_info(location, hotel_name, start_date, end_date):
-    driver = webdriver.Safari()
+    driver = webdriver.Edge()
     search_url = f"https://www.booking.com/searchresults.zh-tw.html?ss={hotel_name}&checkin_year={start_date[:4]}&checkin_month={start_date[5:7]}&checkin_monthday={start_date[8:10]}&checkout_year={end_date[:4]}&checkout_month={end_date[5:7]}&checkout_monthday={end_date[8:10]}"
     displaynames = []
     # 載入網頁
@@ -50,7 +50,7 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
     # 關閉瀏覽器視窗
     driver.quit()
 
-    driver = webdriver.Safari()
+    driver = webdriver.Edge()
     driver.get((href_value))
     driver.implicitly_wait(10)
     page_content = driver.page_source
@@ -74,9 +74,9 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
         if ids==0:
             for i in range(len(ans[ids])):
                 if ans[ids][i]==' ':
-                    #room=ans[ids][0:i+1]
-                    room=ans[ids]
-                    print(room)
+                    room=ans[ids][0:i+1]
+                    #room=ans[ids]
+                    #print(room)
                     break
         if '最多人數:' in ans[ids]:
             people.append(ans[ids])
@@ -98,11 +98,10 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                     breakfast.append('不含早餐')
                 if '最多人數:' not in ans[ids+1]: #如果下一個不是 最多人數的話 代表是新的房間
                     for i in range(len(ans[ids+1])):
-                        if ans[ids+1][i]=='床':
-                            room=ans[ids+1]
-                            #room=ans[ids+1][0:i+1]
+                        if ans[ids+1][i]==' ':
+                            #room=ans[ids+1]
+                            room=ans[ids+1][0:i+1]
                             break
-                print('---')
             except:
                 pass
             
@@ -111,8 +110,8 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
 if __name__ == "__main__":
     location = input('請輸入縣市: ') #台北 'JR東日本大飯店 台北'
     hotel_name = input('請輸入旅館名稱:  （請輸入全名）')
-    start_date = input('請輸入開始日期:  ') #'2023/08/31'
-    end_date = input('請輸入結束日期:  ') #'2023/09/03'
+    start_date = input('請輸入開始日期:  ') #'2023/09/28'
+    end_date = input('請輸入結束日期:  ') #'2023/09/29'
     start_date_obj = datetime.strptime(start_date, "%Y/%m/%d")
     end_date_obj = datetime.strptime(end_date, "%Y/%m/%d")
     # 定义每两天为一组
