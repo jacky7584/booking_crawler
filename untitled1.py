@@ -72,14 +72,13 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
     room=''
     for ids,i in enumerate(ans):
         if ids==0:
+            #print(ans[ids])
             for i in range(len(ans[ids])):
                 if ans[ids][i]==' ':
                     room=ans[ids][0:i+1]
                     #room=ans[ids]
                     #print(room)
                     break
-        if '最多人數:' in ans[ids]:
-            people.append(ans[ids])
         if '選擇客房01' in ans[ids]:
             try:
                 location_list.append(location)
@@ -87,7 +86,7 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                 roomtype.append(room)
                 for i in range(len(ans[ids])):
                     if ans[ids][i]=='(':
-                        first=i+1
+                        first=i+5
                     elif ans[ids][i]==')':
                         price.append(ans[ids][first:i])
                         break
@@ -108,44 +107,54 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
     driver.quit()
     
 if __name__ == "__main__":
-    location = input('請輸入縣市: ') #台北 'JR東日本大飯店 台北'
-    hotel_name = input('請輸入旅館名稱:  （請輸入全名）')
-    start_date = input('請輸入開始日期:  ') #'2023/09/28'
-    end_date = input('請輸入結束日期:  ') #'2023/09/29'
-    start_date_obj = datetime.strptime(start_date, "%Y/%m/%d")
-    end_date_obj = datetime.strptime(end_date, "%Y/%m/%d")
-    # 定义每两天为一组
-    days_per_group = 2
+    #location = input('請輸入縣市: ') #台北 'JR東日本大飯店 台北'
+    #hotel_name = input('請輸入旅館名稱:  （請輸入全名）')
+    start_date = datetime.now().date()
+    period=1
+    end_date = start_date + timedelta(days=period)
+    hotel_info=pd.read_excel('hotel_name_location.xlsx')
     location_list=[]
     hotel_name_list=[]
-    people=[]
     roomtype=[]
     price=[]
     breakfast=[]
     alldate=[]
-    while start_date_obj <end_date_obj:
-        # 计算下一组的结束日期
-        next_end_date_obj = start_date_obj + timedelta(days=days_per_group - 1)
-        # 格式化日期字符串
-        formatted_start_date = start_date_obj.strftime("%Y/%m/%d")
-        formatted_end_date = next_end_date_obj.strftime("%Y/%m/%d")
-        # 输出日期范围
-        scrape_hotel_info(location, hotel_name, formatted_start_date, formatted_end_date)
-        print(formatted_start_date,'-',formatted_end_date)
-        # 更新起始日期到下一组的开始日期
-        start_date_obj = next_end_date_obj 
-    print(len(price))
-    print(len(alldate))
-    print(len(breakfast))
-    print(len(roomtype))
-    df=pd.DataFrame()
-    df['地區']=location_list
-    df['飯店名']=hotel_name_list
-    df['日期']=alldate
-    df['房型']=roomtype
-    df['房價']=price
-    df['有無早餐']=breakfast
-    df.to_csv(hotel_name+'.csv',index=0)
+    # 定义每两天为一组
+    days_per_group = 2
+    for i in range(len(hotel_info)):
+        start_date_obj = start_date
+        end_date_obj = end_date
+        while start_date_obj <end_date_obj:
+            # 计算下一组的结束日期
+            next_end_date_obj = start_date_obj + timedelta(days=days_per_group - 1)
+            # 格式化日期字符串
+            formatted_start_date = start_date_obj.strftime("%Y/%m/%d")
+            formatted_end_date = next_end_date_obj.strftime("%Y/%m/%d")
+            # 输出日期范围
+            scrape_hotel_info(hotel_info['location'][i], hotel_info['name'][i], formatted_start_date, formatted_end_date)
+            print(formatted_start_date,'-',formatted_end_date)
+            # 更新起始日期到下一组的开始日期
+            start_date_obj = next_end_date_obj 
+            print(len(price))
+            print(len(alldate))
+            print(len(breakfast))
+            print(len(roomtype))
+        if  i==len(hotel_info)-1 or hotel_info['location'][i]!=hotel_info['location'][i+1] :
+            df=pd.DataFrame()
+            df['地區']=location_list
+            df['旅館名稱']=hotel_name_list
+            df['日期']=alldate
+            df['房型']=roomtype
+            df['房價']=price
+            df['有無含早餐']=breakfast
+            df['房價變動']=''
+            df.to_excel(hotel_info['location'][i]+'旅館房價調查'+str(start_date_obj)+'.xlsx',sheet_name='sheet1',index=0)
+            location_list=[]
+            hotel_name_list=[]
+            roomtype=[]
+            price=[]
+            breakfast=[]
+            alldate=[]
     
     
     
