@@ -10,7 +10,7 @@ from selenium import webdriver
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
-
+import pdfD
 from selenium.webdriver.common.by import By
 import time
 from selenium.webdriver.support.ui import WebDriverWait
@@ -70,20 +70,19 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                 ans.append(clean_data)
             #print(data.get_text())  # 印出 <td> 元素的文字內容
     room=''
-    for ids,i in enumerate(ans):
-        if ids==0:
-            #print(ans[ids])
-            for i in range(len(ans[ids])):
-                if ans[ids][i]==' ':
-                    room=ans[ids][0:i+1]
+    for ids,name in enumerate(ans):
+        if (ids+1)<len(ans) and '最多人數:' in ans[ids+1]: #如果下一個不是 最多人數的話 代表是新的房間
+            for j in range(len(ans[ids])):
+                if ans[ids][j]==' ':
+                    room=ans[ids][0:j+1]
+                    roomtype.append(room)
                     #room=ans[ids]
-                    #print(room)
+                    print(room)
                     break
         if '選擇客房01' in ans[ids]:
             try:
                 location_list.append(location)
                 hotel_name_list.append(hotel_name)
-                roomtype.append(room)
                 for i in range(len(ans[ids])):
                     if ans[ids][i]=='(':
                         first=i+5
@@ -95,15 +94,8 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                     breakfast.append('含早餐')
                 else:
                     breakfast.append('不含早餐')
-                if '最多人數:' not in ans[ids+1]: #如果下一個不是 最多人數的話 代表是新的房間
-                    for i in range(len(ans[ids+1])):
-                        if ans[ids+1][i]==' ':
-                            #room=ans[ids+1]
-                            room=ans[ids+1][0:i+1]
-                            break
             except:
                 pass
-            
     driver.quit()
     
 if __name__ == "__main__":
