@@ -10,7 +10,6 @@ from selenium import webdriver
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
-import pdfD
 from selenium.webdriver.common.by import By
 import time
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,7 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 def scrape_hotel_info(location, hotel_name, start_date, end_date):
-    driver = webdriver.Edge()
+    driver = webdriver.Safari()
     search_url = f"https://www.booking.com/searchresults.zh-tw.html?ss={hotel_name}&checkin_year={start_date[:4]}&checkin_month={start_date[5:7]}&checkin_monthday={start_date[8:10]}&checkout_year={end_date[:4]}&checkout_month={end_date[5:7]}&checkout_monthday={end_date[8:10]}"
     displaynames = []
     # 載入網頁
@@ -35,7 +34,19 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
 
     # 點選關閉按鈕
     close_button.click()
-
+    # 使用 BeautifulSoup 解析網頁內容
+    soup = BeautifulSoup(page_content, 'html.parser')
+    class_name = 'f6431b446c a23c043802'  # 请将此处替换为您要查找的class值
+    elements_with_class = soup.find_all('div', class_=class_name)
+    
+    # 確認首間是要查詢的飯店
+    for id,element in enumerate(elements_with_class):
+        if id==0:
+            print(element.get_text(),hotel_name)
+            if element.get_text()!=hotel_name:
+                return 
+        else:
+            break
     # 假設您已經獲取了網頁內容並存儲在 page_content 變數中
     # page_content = ...
 
@@ -50,7 +61,7 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
     # 關閉瀏覽器視窗
     driver.quit()
 
-    driver = webdriver.Edge()
+    driver = webdriver.Safari()
     driver.get((href_value))
     driver.implicitly_wait(10)
     page_content = driver.page_source
@@ -70,17 +81,19 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                 ans.append(clean_data)
             #print(data.get_text())  # 印出 <td> 元素的文字內容
     room=''
+    check_roomnumber=0
     for ids,name in enumerate(ans):
         if (ids+1)<len(ans) and '最多人數:' in ans[ids+1]: #如果下一個不是 最多人數的話 代表是新的房間
             for j in range(len(ans[ids])):
                 if ans[ids][j]==' ':
                     room=ans[ids][0:j+1]
-                    roomtype.append(room)
+                    check_roomnumber=1
                     #room=ans[ids]
-                    print(room)
+                    #print(room)
                     break
         if '選擇客房01' in ans[ids]:
             try:
+                roomtype.append(room)
                 location_list.append(location)
                 hotel_name_list.append(hotel_name)
                 for i in range(len(ans[ids])):
@@ -102,7 +115,7 @@ if __name__ == "__main__":
     #location = input('請輸入縣市: ') #台北 'JR東日本大飯店 台北'
     #hotel_name = input('請輸入旅館名稱:  （請輸入全名）')
     start_date = datetime.now().date()
-    period=1
+    period=10
     end_date = start_date + timedelta(days=period)
     hotel_info=pd.read_excel('hotel_name_location.xlsx')
     location_list=[]
