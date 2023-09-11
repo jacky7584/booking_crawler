@@ -17,7 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 def scrape_hotel_info(location, hotel_name, start_date, end_date):
-    driver = webdriver.Safari()
+    driver = webdriver.Edge()
     search_url = f"https://www.booking.com/searchresults.zh-tw.html?ss={hotel_name}&checkin_year={start_date[:4]}&checkin_month={start_date[5:7]}&checkin_monthday={start_date[8:10]}&checkout_year={end_date[:4]}&checkout_month={end_date[5:7]}&checkout_monthday={end_date[8:10]}"
     displaynames = []
     # 載入網頁
@@ -61,7 +61,7 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
     # 關閉瀏覽器視窗
     driver.quit()
 
-    driver = webdriver.Safari()
+    driver = webdriver.Edge()
     driver.get((href_value))
     driver.implicitly_wait(10)
     page_content = driver.page_source
@@ -87,14 +87,16 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
             for j in range(len(ans[ids])):
                 if ans[ids][j]==' ':
                     room=ans[ids][0:j+1]
-                    check_roomnumber=1
+                    check_roomnumber+=1
                     #room=ans[ids]
                     #print(room)
                     break
         if '選擇客房01' in ans[ids]:
             try:
+                check_roomnumber+=1
                 roomtype.append(room)
                 location_list.append(location)
+                haveroom.append('')
                 hotel_name_list.append(hotel_name)
                 for i in range(len(ans[ids])):
                     if ans[ids][i]=='(':
@@ -109,13 +111,21 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                     breakfast.append('不含早餐')
             except:
                 pass
+    if check_roomnumber==0:
+        roomtype.append('')
+        location_list.append(location)
+        hotel_name_list.append(hotel_name)
+        haveroom.append('X')
+        price.append('')
+        alldate.append(start_date) 
+        breakfast.append('')
     driver.quit()
     
 if __name__ == "__main__":
     #location = input('請輸入縣市: ') #台北 'JR東日本大飯店 台北'
     #hotel_name = input('請輸入旅館名稱:  （請輸入全名）')
     start_date = datetime.now().date()
-    period=10
+    period=1
     end_date = start_date + timedelta(days=period)
     hotel_info=pd.read_excel('hotel_name_location.xlsx')
     location_list=[]
@@ -124,6 +134,7 @@ if __name__ == "__main__":
     price=[]
     breakfast=[]
     alldate=[]
+    haveroom=[]
     # 定义每两天为一组
     days_per_group = 2
     for i in range(len(hotel_info)):
@@ -150,10 +161,16 @@ if __name__ == "__main__":
             df['旅館名稱']=hotel_name_list
             df['日期']=alldate
             df['房型']=roomtype
+            df['房型1']=''
+            df['房型2']=''
+            df['房型3']=''
+            df['房型4']=''
+            df['房型5']=''
             df['房價']=price
             df['有無含早餐']=breakfast
             df['房價變動']=''
-            df.to_excel(hotel_info['location'][i]+'旅館房價調查'+str(start_date_obj)+'.xlsx',sheet_name='sheet1',index=0)
+            df['有無房']=haveroom
+            df.to_excel(hotel_info['location'][i]+'旅館房價調查'+str(start_date)+'.xls',sheet_name='sheet1',index=0)
             location_list=[]
             hotel_name_list=[]
             roomtype=[]
