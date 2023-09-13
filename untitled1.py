@@ -102,7 +102,8 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                     if ans[ids][i]=='(':
                         first=i+5
                     elif ans[ids][i]==')':
-                        price.append(ans[ids][first:i])
+                        price_or=ans[ids][first:i].replace(',','')
+                        price.append(int(price_or))
                         break
                 alldate.append(start_date)                
                 if '含早餐' in ans[ids-1]:
