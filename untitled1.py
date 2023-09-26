@@ -171,7 +171,8 @@ if __name__ == "__main__":
             df['有無含早餐']=breakfast
             df['房價變動']=''
             df['有無房']=haveroom
-            df.to_excel(hotel_info['location'][i]+'旅館房價調查'+str(start_date)+'.xls',sheet_name='sheet1',index=0)
+            filename = str(hotel_info['location'][i]) + '旅館房價調查' + str(start_date) + '.xls'
+            df.to_excel(filename, sheet_name='sheet1', index=0, engine='openpyxl')
             location_list=[]
             hotel_name_list=[]
             roomtype=[]
