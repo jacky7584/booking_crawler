@@ -17,7 +17,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 def scrape_hotel_info(location, hotel_name, start_date, end_date):
-    try:
         driver = webdriver.Edge()
         search_url = f"https://www.booking.com/searchresults.zh-tw.html?ss={hotel_name}&checkin_year={start_date[:4]}&checkin_month={start_date[5:7]}&checkin_monthday={start_date[8:10]}&checkout_year={end_date[:4]}&checkout_month={end_date[5:7]}&checkout_monthday={end_date[8:10]}"
         displaynames = []
@@ -31,10 +30,13 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
         page_content = driver.page_source
         #print(page_content)
         # 假設登入提示的元素帶有 aria-label 屬性
-        close_button = driver.find_element(By.CSS_SELECTOR, '[aria-label="關閉登入的資訊。"]')
-    
-        # 點選關閉按鈕
-        close_button.click()
+        try:
+            close_button = driver.find_element(By.CSS_SELECTOR, '[aria-label="關閉登入的資訊。"]')
+        
+            # 點選關閉按鈕
+            close_button.click()
+        except:
+            pass
         # 使用 BeautifulSoup 解析網頁內容
         soup = BeautifulSoup(page_content, 'html.parser')
         class_name = 'f6431b446c a23c043802'  # 请将此处替换为您要查找的class值
@@ -50,112 +52,11 @@ def scrape_hotel_info(location, hotel_name, start_date, end_date):
                 break
         # 假設您已經獲取了網頁內容並存儲在 page_content 變數中
         # page_content = ...
-    
+        
         # 使用 BeautifulSoup 解析網頁內容
         soup = BeautifulSoup(page_content, 'html.parser')
     
-        target_element = driver.find_element(By.CLASS_NAME, 'e13098a59f[data-testid="title-link"]')
-    
-        # 取得 href 屬性的值
-        href_value = target_element.get_attribute('href')
-    
-        # 關閉瀏覽器視窗
-        driver.quit()
-    
-        driver = webdriver.Edge()
-        driver.get((href_value))
-        driver.implicitly_wait(10)
-        page_content = driver.page_source
-        soup = BeautifulSoup(page_content, 'html.parser')
-    
-        # 找到所有的 <tr> 元素
-        table_rows = soup.find_all('tr')
-        ans=[]
-        # 遍歷每個 <tr> 元素，然後提取其中的 <td> 資訊
-        for row in table_rows:
-            table_data = row.find_all('td')
-            for data in table_data:
-                if data.get_text()=='\xa0' or data.get_text()=='\n\n1—\n\n' or data.get_text()=='':
-                    continue
-                else:
-                    clean_data=data.get_text().replace('\n','')
-                    ans.append(clean_data)
-                #print(data.get_text())  # 印出 <td> 元素的文字內容
-        room=''
-        check_roomnumber=0
-        for ids,name in enumerate(ans):
-            if (ids+1)<len(ans) and '最多人數:' in ans[ids+1]: #如果下一個不是 最多人數的話 代表是新的房間
-                for j in range(len(ans[ids])):
-                    if ans[ids][j]==' ':
-                        room=ans[ids][0:j+1]
-                        check_roomnumber+=1
-                        #room=ans[ids]
-                        #print(room)
-                        break
-            if '選擇客房01' in ans[ids]:
-                try:
-                    check_roomnumber+=1
-                    roomtype.append(room)
-                    location_list.append(location)
-                    haveroom.append('')
-                    hotel_name_list.append(hotel_name)
-                    for i in range(len(ans[ids])):
-                        if ans[ids][i]=='(':
-                            first=i+5
-                        elif ans[ids][i]==')':
-                            price_or=ans[ids][first:i].replace(',','')
-                            price.append(int(price_or))
-                            break
-                    alldate.append(start_date)                
-                    if '含早餐' in ans[ids-1]:
-                        breakfast.append('含早餐')
-                    else:
-                        breakfast.append('不含早餐')
-                except:
-                    pass
-        if check_roomnumber==0:
-            roomtype.append('')
-            location_list.append(location)
-            hotel_name_list.append(hotel_name)
-            haveroom.append('X')
-            price.append('')
-            alldate.append(start_date) 
-            breakfast.append('')
-        driver.quit()
-    except:
-        print('沒有登入視窗')
-        driver = webdriver.Edge()
-        search_url = f"https://www.booking.com/searchresults.zh-tw.html?ss={hotel_name}&checkin_year={start_date[:4]}&checkin_month={start_date[5:7]}&checkin_monthday={start_date[8:10]}&checkout_year={end_date[:4]}&checkout_month={end_date[5:7]}&checkout_monthday={end_date[8:10]}"
-        displaynames = []
-        # 載入網頁
-        driver.get(search_url)
-    
-        # 等待網頁完全載入（可以根據實際情況調整等待時間）
-        driver.implicitly_wait(10)
-    
-        # 獲取網頁內容
-        page_content = driver.page_source
-        #print(page_content)
-        
-        soup = BeautifulSoup(page_content, 'html.parser')
-        class_name = 'f6431b446c a23c043802'  # 请将此处替换为您要查找的class值
-        elements_with_class = soup.find_all('div', class_=class_name)
-        
-        # 確認首間是要查詢的飯店
-        for id,element in enumerate(elements_with_class):
-            if id==0:
-                print(element.get_text(),hotel_name)
-                if element.get_text()!=hotel_name:
-                    return 
-            else:
-                break
-        # 假設您已經獲取了網頁內容並存儲在 page_content 變數中
-        # page_content = ...
-    
-        # 使用 BeautifulSoup 解析網頁內容
-        soup = BeautifulSoup(page_content, 'html.parser')
-    
-        target_element = driver.find_element(By.CLASS_NAME, 'e13098a59f[data-testid="title-link"]')
+        target_element = driver.find_element(By.CLASS_NAME, 'a78ca197d0[data-testid="title-link"]')
     
         # 取得 href 屬性的值
         href_value = target_element.get_attribute('href')
